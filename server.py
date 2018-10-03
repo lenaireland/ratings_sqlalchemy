@@ -48,6 +48,39 @@ def register_process():
     user = User.query.filter(User.email == email).first()
 
     if user:
+        flash("Account already exists.  Please login.")
+        return redirect("/login")
+
+    new_user = User(email=email, password=password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    # user = User.query.filter(User.email == email).first()
+    # session['userid'] = user.user_id
+
+    flash("User account created. Please login.")
+    return redirect("/login")
+
+@app.route('/login', methods=["GET"])
+def login_form():
+    """Show login form"""
+
+    if session.get('userid'):
+        flash("Already logged in.")
+        return redirect("/")
+
+    return render_template("login_form.html")
+
+@app.route('/login', methods=["POST"])
+def login_process():
+    """Process user login"""
+
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    user = User.query.filter(User.email == email).first()
+
+    if user:
         if password == user.password:
             session['userid'] = user.user_id
             flash("Logged In")
@@ -55,16 +88,18 @@ def register_process():
             return redirect("/")
 
     flash("Login Failed")
-    return redirect("/register")
+    return redirect("/login")
 
 @app.route('/logout')
 def logout():
     """Process user logout"""
 
-    session.pop("userid")
-    flash("Logged out.")
-
+    if session.get('userid'):    
+        session.pop("userid")
+        flash("Logged out.")
+    
     return redirect("/")
+
 
 
 
