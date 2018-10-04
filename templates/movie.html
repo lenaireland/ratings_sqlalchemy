@@ -7,6 +7,21 @@
     Release Date: {{ movie.released_at }}<br>
     <a href="{{ movie.imdb_url }}">IMDB URL: {{ movie.imdb_url}}</a><br>
   </h3>
+
+  {% if session.get('userid') %}
+   <form method="POST">
+     Please input rating for this movie: 
+     <select name="score">
+      <option value=1>1</option>
+      <option value=2>2</option>
+      <option value=3>3</option>
+      <option value=4>4</option>
+      <option value=5>5</option> 
+     </select>
+     <input type="submit">
+   </form>
+  {% endif %}<br><br>
+
   <table>
       <tr>
         <th>User</th>

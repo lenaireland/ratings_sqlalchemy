@@ -79,12 +79,41 @@ def movie_info(movieid):
                            .filter(Movie.movie_id == movieid)
                            .all())
 
-    # goes to individual user page, passing in user and rating info
+    # goes to individual movie page, passing in movie and rating info
     return render_template("movie.html", 
                            movie=movie, 
                            movie_ratings=movie_ratings)
 
+@app.route('/movies/<movieid>', methods=["POST"])
+def rate_info(movieid):
+    """Add or update movie rating for logged in user"""
 
+    # gets provided score from movie.html HTML form
+    score = request.form.get("score")
+
+    # query database to see if user has already rated this movie (rating exists)
+    rating = Rating.query.filter(Rating.movie_id == movieid, 
+                                 Rating.user_id == session['userid']).first()
+
+    # if rating exists:
+    if rating:
+        # update score in rating instance
+        rating.score = score
+        flash("Your updated rating was recorded.")
+    # if rating doesn't exist:
+    else:
+        # create new instance of Rating class
+        new_rating = Rating(user_id=session['userid'], 
+                            movie_id=movieid, 
+                            score=score)
+        # add new rating to database
+        db.session.add(new_rating)
+        flash("Your new rating was recorded.")
+
+    # commit changes to database
+    db.session.commit()
+
+    return redirect('/movies')
 
 @app.route('/register', methods=["GET"])
 def register_form():

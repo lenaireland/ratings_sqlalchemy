@@ -24,10 +24,15 @@
 
 <!--   <script>
 
-      if session['userid'] {
+      if (session.get('userid')) {
         $('login_logout').innerHTML("Log Out")
-        $('login_logout').on("submit", )
+        $('login_logout').on("submit", function () {location.href="/logout"})
       }
+      else {
+        $('login_logout').innerHTML("Log In")
+        $('login_logout').on("submit", function () {location.href="/login"})
+      }
+
   </script> -->
 
   {% block content %} put your content here {% endblock %}
