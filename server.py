@@ -36,9 +36,12 @@ def user_list():
 @app.route('/users/<userid>')
 def users_info(userid):
     """Show individual user page"""
+
+    # queries database for user_id, age, zipcode for given user id
     user = (db.session.query(User.user_id, User.age, User.zipcode)
                      .filter(User.user_id == userid).one())
 
+    # queries database for score and movie title for all user's rankings
     user_movie_ratings =  (db.session.query(User.user_id, 
                                             Rating.score, 
                                             Movie.title)
@@ -47,9 +50,41 @@ def users_info(userid):
                            .filter(User.user_id == userid)
                            .all())
 
+    # goes to individual user page, passing in user and rating info
     return render_template("users.html", 
                            user=user, 
                            user_movie_ratings=user_movie_ratings)
+
+@app.route('/movies')
+def movie_list():
+    """Show list of movies."""
+
+    # get all Movie instances from movies table in database
+    movies = Movie.query.order_by("title").all()
+    return render_template("movies_list.html", movies=movies)
+
+@app.route('/movies/<movieid>')
+def movie_info(movieid):
+    """Show individual movie page"""
+
+    # queries database for movie instance that matches movie id
+    movie = Movie.query.filter(Movie.movie_id == movieid).one()
+
+    # queries database for score and movie title for all user's rankings
+    movie_ratings =  (db.session.query(Movie.movie_id, 
+                                            Rating.score, 
+                                            User.email)
+                           .join(Rating)
+                           .join(User)
+                           .filter(Movie.movie_id == movieid)
+                           .all())
+
+    # goes to individual user page, passing in user and rating info
+    return render_template("movie.html", 
+                           movie=movie, 
+                           movie_ratings=movie_ratings)
+
+
 
 @app.route('/register', methods=["GET"])
 def register_form():
