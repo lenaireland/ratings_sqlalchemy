@@ -29,34 +29,55 @@ def index():
 def user_list():
     """Show list of users."""
 
+    # get all User instances from users table in database
     users = User.query.all()
     return render_template("user_list.html", users=users)
 
+@app.route('/users/<userid>')
+def users_info(userid):
+    """Show individual user page"""
+    user = (db.session.query(User.user_id, User.age, User.zipcode)
+                     .filter(User.user_id == userid).one())
+
+    user_movie_ratings =  (db.session.query(User.user_id, 
+                                            Rating.score, 
+                                            Movie.title)
+                           .join(Rating)
+                           .join(Movie)
+                           .filter(User.user_id == userid)
+                           .all())
+
+    return render_template("users.html", 
+                           user=user, 
+                           user_movie_ratings=user_movie_ratings)
+
 @app.route('/register', methods=["GET"])
 def register_form():
-    """Show login form"""
+    """Show registration form"""
 
     return render_template("register_form.html")
 
 @app.route('/register', methods=["POST"])
 def register_process():
-    """Process user login"""
+    """Process user registration"""
 
+    # take user input from register_form.html
     email = request.form.get("email")
     password = request.form.get("password")
 
+    # query users table in database, retrieve user instance that matches email    
     user = User.query.filter(User.email == email).first()
 
+    # if there is a user in database that matches email    
     if user:
-        flash("Account already exists.  Please login.")
+        flash("Account already exists. Please login.")
         return redirect("/login")
 
+    # if email is not already in database, create new instance of User class
     new_user = User(email=email, password=password)
+    # add new user instance to users table in database
     db.session.add(new_user)
     db.session.commit()
-
-    # user = User.query.filter(User.email == email).first()
-    # session['userid'] = user.user_id
 
     flash("User account created. Please login.")
     return redirect("/login")
@@ -65,28 +86,40 @@ def register_process():
 def login_form():
     """Show login form"""
 
+    # Check browser session to see if user already logged in
     if session.get('userid'):
         flash("Already logged in.")
-        return redirect("/")
 
+        # redirect to logged in user's page 
+        # using string formatting to pass in user id from session (cookie-ish)
+        return redirect("/users/{}".format(session['userid']))
+
+    # if not logged in, render login form
     return render_template("login_form.html")
 
 @app.route('/login', methods=["POST"])
 def login_process():
     """Process user login"""
 
+    # take user input from login_form.html
     email = request.form.get("email")
     password = request.form.get("password")
 
+    # query users table in database, retrieve user instance that matches email
     user = User.query.filter(User.email == email).first()
 
+    # if there is a user in database that matches email
     if user:
+        # if input password matches:
         if password == user.password:
             session['userid'] = user.user_id
             flash("Logged In")
 
-            return redirect("/")
+        # redirect to logged in user's page 
+        # using string formatting to pass in user id from session (cookie-ish)
+        return redirect("/users/{}".format(session['userid']))
 
+    # if user not in database or password incorrect
     flash("Login Failed")
     return redirect("/login")
 
@@ -94,6 +127,7 @@ def login_process():
 def logout():
     """Process user logout"""
 
+    # if browser session exists (logged in), then logout
     if session.get('userid'):    
         session.pop("userid")
         flash("Logged out.")
