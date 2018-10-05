@@ -18,6 +18,14 @@
     {% endfor %}
   </ul>
 
+  <div>
+    {% if session.get('userid') %}
+      <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+    {% endif %}
+  </div>
+
 <!--   <button id="login_logout"></button> -->
 
   <hr>
